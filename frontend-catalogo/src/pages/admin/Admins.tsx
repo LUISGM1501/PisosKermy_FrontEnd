@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Pencil, Key, Power, X, AlertCircle } from 'lucide-react';
-import { adminsApi, AdminFormData } from '../../api/auth';
+import { adminsApi, AdminFormData } from '../../api/admins';
 import { Admin } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 
