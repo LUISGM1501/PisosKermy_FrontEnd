@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Spinner } from '../ui/Spinner';
+import { Spinner } from '../ui/spinner';
 import { ROUTES } from '../../utils/constants';
 
 interface ProtectedRouteProps {

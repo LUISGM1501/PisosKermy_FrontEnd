@@ -54,7 +54,7 @@ const Products = () => {
     setLoading(true);
     setError(null);
     try {
-      // ✅ CORREGIDO: pasar filtros correctamente
+      // pasar filtros correctamente
       const filters: any = {};
       if (selectedCategory) filters.category_id = selectedCategory;
       if (selectedTag) filters.tag_id = selectedTag;

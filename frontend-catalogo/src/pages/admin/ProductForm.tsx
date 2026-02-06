@@ -57,7 +57,7 @@ const ProductForm = () => {
           price: product.price.toString(),
           category_ids: product.categories?.map((c: any) => c.id) || [],
           tag_ids: product.tags?.map((t: any) => t.id) || [],
-          provider_id: product.provider_id || undefined,
+          provider_id: product.providers.map(p => p.id) || undefined,
           image: null,
         });
         if (product.image_url) {

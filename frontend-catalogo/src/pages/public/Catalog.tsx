@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ProductFilters } from '../../components/catalog/ProductFilters';
 import { ProductGrid } from '../../components/catalog/ProductGrid';
 import { Pagination } from '../../components/common/Pagination';
-import { Alert } from '../../components/ui/Alert';
+import { Alert } from '../../components/ui/alert';
 import { productsApi } from '../../api/products';
 import { categoriesApi } from '../../api/categories';
 import { tagsApi } from '../../api/tags';
