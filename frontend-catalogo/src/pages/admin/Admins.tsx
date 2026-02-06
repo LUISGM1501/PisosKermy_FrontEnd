@@ -7,7 +7,7 @@ import { useAuth } from '../../hooks/useAuth';
 type ModalMode = 'create' | 'edit' | 'password' | null;
 
 const Admins = () => {
-  const { admin: currentAdmin } = useAuth();
+  const { user: currentAdmin } = useAuth();
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

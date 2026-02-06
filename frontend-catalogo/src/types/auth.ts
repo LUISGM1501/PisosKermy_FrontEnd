@@ -5,6 +5,8 @@ export interface Admin {
   id: number;
   email: string;
   name: string;
+  is_active?: boolean;  
+  created_at?: string; 
 }
 
 export interface LoginRequest {
@@ -18,9 +20,10 @@ export interface LoginResponse {
 }
 
 export interface AuthContextType {
-  admin: Admin | null;
-  token: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  user: Admin | null;  // Cambiado de 'admin' a 'user' para coincidir con AuthContext.tsx
+  token?: string | null;
   isAuthenticated: boolean;
+  isLoading?: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => void;
 }

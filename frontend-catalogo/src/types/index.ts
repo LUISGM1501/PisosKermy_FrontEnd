@@ -4,3 +4,4 @@ export * from './tag';
 export * from './provider';
 export * from './product';
 export * from './api';
+export * from './audit';

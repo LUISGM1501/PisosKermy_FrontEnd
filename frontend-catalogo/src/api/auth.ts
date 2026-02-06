@@ -1,5 +1,5 @@
 import apiClient from './client';
-import { LoginRequest, LoginResponse, Admin, AuditLogsResponse } from '../types';
+import { LoginRequest, LoginResponse, Admin } from '../types';
 
 export const authApi = {
   /**
@@ -21,8 +21,8 @@ export const authApi = {
   /**
    * Obtener bitácora de auditoría
    */
-  getAuditLogs: async (page: number = 1): Promise<AuditLogsResponse> => {
-    const response = await apiClient.get<AuditLogsResponse>('/api/auth/audit', {
+  getAuditLogs: async (page: number = 1) => {
+    const response = await apiClient.get('/api/auth/audit', {
       params: { page },
     });
     return response.data;
