@@ -14,7 +14,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Spinner size="large" />
+        <Spinner size="lg" />
       </div>
     );
   }
