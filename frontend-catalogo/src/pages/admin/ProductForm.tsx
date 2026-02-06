@@ -57,7 +57,7 @@ const ProductForm = () => {
           price: product.price.toString(),
           category_ids: product.categories?.map((c: any) => c.id) || [],
           tag_ids: product.tags?.map((t: any) => t.id) || [],
-          provider_id: product.providers.map(p => p.id) || undefined,
+          provider_id: product.providers[0]?.id || undefined,
           image: null,
         });
         if (product.image_url) {
@@ -137,7 +137,7 @@ const ProductForm = () => {
         category_ids: form.category_ids,
         tag_ids: form.tag_ids,
         provider_ids: form.provider_id ? [form.provider_id] : [],
-        image: form.image,
+        image: form.image || undefined,
       };
 
       if (isEditing && id) {

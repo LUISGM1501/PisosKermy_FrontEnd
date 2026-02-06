@@ -83,7 +83,7 @@ const ProductDetail = () => {
         <div className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-card">
           {hasImage ? (
             <img
-              src={product.image_url}
+              src={product.image_url || undefined}
               alt={product.name}
               className="w-full h-full object-cover"
               onError={() => setImgError(true)}

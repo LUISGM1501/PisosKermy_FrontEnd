@@ -96,7 +96,7 @@ const Catalog = () => {
         </div>
 
         {error && (
-          <Alert type="error" className="mb-6">
+          <Alert variant="destructive" className="mb-6">
             {error}
           </Alert>
         )}

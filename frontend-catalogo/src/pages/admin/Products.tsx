@@ -62,7 +62,7 @@ const Products = () => {
 
       const res = await productsApi.getAllAdmin(page, filters);
       setProducts(res.products);
-      setTotalPages(res.pages || 1);
+      setTotalPages(res.total_pages || 1);
       setTotalProducts(res.total || 0);
     } catch (err) {
       setError('Error al cargar productos');
