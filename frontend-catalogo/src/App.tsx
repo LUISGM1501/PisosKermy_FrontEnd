@@ -17,6 +17,7 @@ import ProductForm from './pages/admin/ProductForm';
 import Categories from './pages/admin/Categories';
 import Tags from './pages/admin/Tags';
 import Providers from './pages/admin/Providers';
+import Admins from './pages/admin/Admins';
 import Audit from './pages/admin/Audit';
 
 const App = () => (
@@ -40,6 +41,7 @@ const App = () => (
         <Route path={ROUTES.ADMIN_CATEGORIES}  element={<ProtectedRoute><AdminLayout><Categories /></AdminLayout></ProtectedRoute>} />
         <Route path={ROUTES.ADMIN_TAGS}        element={<ProtectedRoute><AdminLayout><Tags /></AdminLayout></ProtectedRoute>} />
         <Route path={ROUTES.ADMIN_PROVIDERS}   element={<ProtectedRoute><AdminLayout><Providers /></AdminLayout></ProtectedRoute>} />
+        <Route path={ROUTES.ADMIN_ADMINS}      element={<ProtectedRoute><AdminLayout><Admins /></AdminLayout></ProtectedRoute>} />
         <Route path={ROUTES.ADMIN_AUDIT}       element={<ProtectedRoute><AdminLayout><Audit /></AdminLayout></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>

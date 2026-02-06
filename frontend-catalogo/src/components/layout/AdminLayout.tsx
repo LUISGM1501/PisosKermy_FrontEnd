@@ -8,6 +8,7 @@ import {
   Tag,
   Truck,
   ClipboardList,
+  Users,
   LogOut,
   Menu,
   X,
@@ -25,6 +26,7 @@ const navigation = [
   { name: 'Categorías',   href: '/admin/categorias',  icon: Tag },
   { name: 'Etiquetas',    href: '/admin/etiquetas',   icon: Tag },
   { name: 'Proveedores',  href: '/admin/proveedores', icon: Truck },
+  { name: 'Admins',       href: '/admin/admins',      icon: Users },
   { name: 'Bitácora',     href: '/admin/bitacora',    icon: ClipboardList },
 ];
 
