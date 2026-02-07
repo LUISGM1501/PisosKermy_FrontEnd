@@ -240,7 +240,7 @@ const ProductForm = () => {
   const allImages = [
     ...existingImages.map((img, idx) => ({
       id: img.id,
-      image_url: img.image_path,
+      image_url: img.image_url,
       is_primary: img.is_primary,
       display_order: img.display_order ?? idx,
       isNew: false,
