@@ -22,7 +22,7 @@ const Products = () => {
   const [selectedTag, setSelectedTag] = useState<string>('');
   const [selectedProvider, setSelectedProvider] = useState<string>('');
 
-  // PaginaciÃ³n
+  // Paginación
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
@@ -72,7 +72,7 @@ const Products = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm('Â¿Eliminar este producto?')) return;
+    if (!window.confirm('¿Eliminar este producto?')) return;
     setDeleting(id);
     try {
       await productsApi.delete(id);
@@ -119,9 +119,9 @@ const Products = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* CategorÃ­a */}
+            {/* Categoría */}
             <div>
-              <label className="block text-sm font-medium mb-2">CategorÃ­a</label>
+              <label className="block text-sm font-medium mb-2">Categoría</label>
               <select
                 value={selectedCategory}
                 onChange={(e) => {
@@ -130,7 +130,7 @@ const Products = () => {
                 }}
                 className="w-full px-3 py-2 border border-input rounded-lg"
               >
-                <option value="">Todas las categorÃ­as</option>
+                <option value="">Todas las categorías</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
@@ -202,13 +202,13 @@ const Products = () => {
           <>
             <div className="bg-card rounded-lg shadow overflow-hidden">
               <div className="overflow-x-auto">
-              <table className="w-full">
+                <table className="w-full">
                   <thead className="bg-muted">
                     <tr>
                       <th className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap">Imagen</th>
                       <th className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap">Nombre</th>
                       <th className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap">Precio</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap">CategorÃ­as</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap">Categorías</th>
                       <th className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap">Etiquetas</th>
                       <th className="px-6 py-3 text-right text-sm font-semibold whitespace-nowrap">Acciones</th>
                     </tr>
@@ -233,7 +233,7 @@ const Products = () => {
                           <div className="font-medium">{product.name}</div>
                           <div className="text-sm text-muted-foreground">{product.description}</div>
                         </td>
-                        <td className="px-6 py-4">â‚¡{product.price.toLocaleString()}</td>
+                        <td className="px-6 py-4">₡{product.price.toLocaleString()}</td>
                         <td className="px-6 py-4">
                           {product.categories && product.categories.length > 0 ? (
                             <div className="flex flex-wrap gap-1">
@@ -283,14 +283,14 @@ const Products = () => {
                             </button>
                           </div>
                         </td>
-                    </tr>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-                  ))}
-                </tbody>
-              </table>
             </div>
 
-            {/* PaginaciÃ³n */}
+            {/* Paginación */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-6">
                 <button
@@ -302,7 +302,7 @@ const Products = () => {
                   Anterior
                 </button>
                 <span className="text-sm text-muted-foreground">
-                  PÃ¡gina {page} de {totalPages}
+                  Página {page} de {totalPages}
                 </span>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
