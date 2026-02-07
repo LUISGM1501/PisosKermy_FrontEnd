@@ -244,9 +244,9 @@ const ProductForm = () => {
   }
 
   const allImages = [
-    ...existingImages.map(img => ({ ...img, isNew: false })),
+    ...existingImages.map((img, i) => ({ ...img, isNew: false, display_order: i })),
     ...newImages.map((img, i) => ({ 
-      id: -i, 
+      id: -i - 1, 
       image_url: img.preview, 
       is_primary: img.isPrimary, 
       display_order: existingImages.length + i,
@@ -409,7 +409,7 @@ const ProductForm = () => {
 
                     {/* Número */}
                     <div className="absolute top-1 right-1 bg-black/60 text-white px-1.5 py-0.5 rounded text-xs">
-                      #{img.display_order + 1}
+                      #{(img.display_order ?? 0) + 1}
                     </div>
 
                     {/* Acciones */}
@@ -417,7 +417,14 @@ const ProductForm = () => {
                       {!img.is_primary && (
                         <button
                           type="button"
-                          onClick={() => img.isNew ? setPrimaryNew(newImages.findIndex((n: ImageFile) => n.preview === img.image_url)) : setPrimaryExisting(img.id)}
+                          onClick={() => {
+                            if (img.isNew) {
+                              const idx = newImages.findIndex((n: ImageFile) => n.preview === img.image_url);
+                              if (idx >= 0) setPrimaryNew(idx);
+                            } else {
+                              setPrimaryExisting(img.id);
+                            }
+                          }}
                           className="p-1.5 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 rounded"
                           title="Marcar como principal"
                         >
@@ -426,7 +433,14 @@ const ProductForm = () => {
                       )}
                       <button
                         type="button"
-                        onClick={() => img.isNew ? removeNewImage(newImages.findIndex((n: ImageFile) => n.preview === img.image_url)) : removeExisting(img.id)}
+                        onClick={() => {
+                          if (img.isNew) {
+                            const idx = newImages.findIndex((n: ImageFile) => n.preview === img.image_url);
+                            if (idx >= 0) removeNewImage(idx);
+                          } else {
+                            removeExisting(img.id);
+                          }
+                        }}
                         className="p-1.5 bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded"
                         title="Eliminar"
                       >
@@ -450,10 +464,6 @@ const ProductForm = () => {
                 className="hidden"
               />
             </label>
-            <p className="text-xs text-muted-foreground">
-              <Star className="inline h-3 w-3 fill-yellow-400 text-yellow-400" /> = Imagen principal. 
-              Puedes agregar hasta 10 imágenes.
-            </p>
           </div>
 
           {/* Botones */}
