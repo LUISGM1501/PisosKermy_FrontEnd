@@ -109,6 +109,20 @@ export const productsApi = {
   delete: async (id: number): Promise<void> => {
     await apiClient.delete(`/api/admin/products/${id}`);
   },
+
+  /**
+   * Eliminar una imagen específica de un producto
+   */
+  deleteImage: async (productId: number, imageId: number): Promise<void> => {
+    await apiClient.delete(`/api/admin/products/${productId}/images/${imageId}`);
+  },
+
+  /**
+   * Marcar una imagen como principal
+   */
+  setPrimaryImage: async (productId: number, imageId: number): Promise<void> => {
+    await apiClient.put(`/api/admin/products/${productId}/images/${imageId}/set-primary`);
+  },
 };
 
 interface ProductFormData {

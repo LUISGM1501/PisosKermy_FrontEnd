@@ -1,8 +1,16 @@
+export interface ProductImage {
+  id: number;
+  image_url: string;
+  is_primary: boolean;
+  display_order: number;
+}
+
 export interface Product {
   id: number;
   name: string;
   description: string;
-  image_url: string | null;
+  image_url: string | null;  // Compatibilidad: imagen principal
+  images: ProductImage[];     // NUEVO: Array de todas las imágenes
   categories: { id: number; name: string }[];
   tags: { id: number; name: string }[];
   providers: { id: number; name: string }[];

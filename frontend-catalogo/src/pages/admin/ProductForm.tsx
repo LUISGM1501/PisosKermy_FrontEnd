@@ -1,11 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Upload, X } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { productsApi } from '../../api/products';
 import { categoriesApi } from '../../api/categories';
 import { tagsApi } from '../../api/tags';
 import { providersApi } from '../../api/providers';
-import { Category, Tag, Provider } from '../../types';
+import { Category, Tag, Provider, ProductImage } from '../../types';
+import { ImageUploader } from '../../components/common/ImageUploader';
+import { ExistingImagesManager } from '../../components/common/ExistingImagesManager';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+
+interface ImageFile {
+  file: File;
+  preview: string;
+  isPrimary: boolean;
+}
 
 const ProductForm = () => {
   const navigate = useNavigate();
@@ -18,16 +28,17 @@ const ProductForm = () => {
     price: '',
     category_ids: [] as number[],
     tag_ids: [] as number[],
-    provider_id: undefined as number | undefined,
-    image: null as File | null,
+    provider_ids: [] as number[],
   });
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
 
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [existingImage, setExistingImage] = useState<string | null>(null);
+  // NUEVO: Gestión de imágenes
+  const [newImages, setNewImages] = useState<ImageFile[]>([]);
+  const [existingImages, setExistingImages] = useState<ProductImage[]>([]);
+  const [deletedImageIds, setDeletedImageIds] = useState<number[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,11 +68,12 @@ const ProductForm = () => {
           price: product.price.toString(),
           category_ids: product.categories?.map((c: any) => c.id) || [],
           tag_ids: product.tags?.map((t: any) => t.id) || [],
-          provider_id: product.providers[0]?.id || undefined,
-          image: null,
+          provider_ids: product.providers?.map((p: any) => p.id) || [],
         });
-        if (product.image_url) {
-          setExistingImage(product.image_url);
+        
+        // Cargar imágenes existentes
+        if (product.images && product.images.length > 0) {
+          setExistingImages(product.images);
         }
       }
     } catch (err) {
@@ -72,271 +84,279 @@ const ProductForm = () => {
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setForm((prev) => ({ ...prev, image: file }));
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removeImage = () => {
-    setForm((prev) => ({ ...prev, image: null }));
-    setImagePreview(null);
-  };
-
-  const toggleCategory = (catId: number) => {
-    setForm((prev) => ({
-      ...prev,
-      category_ids: prev.category_ids.includes(catId)
-        ? prev.category_ids.filter((id) => id !== catId)
-        : [...prev.category_ids, catId],
-    }));
-  };
-
-  const toggleTag = (tagId: number) => {
-    setForm((prev) => ({
-      ...prev,
-      tag_ids: prev.tag_ids.includes(tagId)
-        ? prev.tag_ids.filter((id) => id !== tagId)
-        : [...prev.tag_ids, tagId],
-    }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-
-    if (!form.name.trim()) {
-      setError('El nombre es obligatorio');
+    
+    // Validar que haya al menos una imagen
+    if (!isEditing && newImages.length === 0) {
+      setError('Debes agregar al menos una imagen');
       return;
     }
-
-    if (!form.price || parseFloat(form.price) <= 0) {
-      setError('El precio debe ser mayor a 0');
-      return;
-    }
-
-    if (form.category_ids.length === 0) {
-      setError('Selecciona al menos una categoría');
+    
+    if (isEditing && existingImages.length === 0 && newImages.length === 0) {
+      setError('El producto debe tener al menos una imagen');
       return;
     }
 
     setLoading(true);
+    setError(null);
 
     try {
-      // Crear objeto con los datos (NO FormData)
-      const productData = {
-        name: form.name.trim(),
-        description: form.description?.trim() || '',
-        price: parseFloat(form.price),
-        category_ids: form.category_ids,
-        tag_ids: form.tag_ids,
-        provider_ids: form.provider_id ? [form.provider_id] : [],
-        image: form.image || undefined,
-      };
+      const formData = new FormData();
+      formData.append('name', form.name);
+      formData.append('description', form.description);
+      formData.append('price', form.price);
+      formData.append('category_ids', JSON.stringify(form.category_ids));
+      formData.append('tag_ids', JSON.stringify(form.tag_ids));
+      formData.append('provider_ids', JSON.stringify(form.provider_ids));
+
+      // Agregar nuevas imágenes
+      newImages.forEach((img, index) => {
+        formData.append('images', img.file);
+        // Enviar si es principal
+        if (img.isPrimary) {
+          formData.append('primary_image_index', index.toString());
+        }
+      });
 
       if (isEditing && id) {
-        await productsApi.update(parseInt(id), productData);
+        // Actualizar producto
+        await productsApi.update(parseInt(id), formData as any);
+        
+        // Eliminar imágenes marcadas
+        for (const imageId of deletedImageIds) {
+          await productsApi.deleteImage(parseInt(id), imageId);
+        }
+        
+        // Si hay imagen existente marcada como principal, actualizarla
+        const primaryExisting = existingImages.find(img => img.is_primary);
+        if (primaryExisting && newImages.length === 0) {
+          await productsApi.setPrimaryImage(parseInt(id), primaryExisting.id);
+        }
       } else {
-        await productsApi.create(productData);
+        // Crear producto
+        await productsApi.create(formData as any);
       }
 
       navigate('/admin/productos');
     } catch (err: any) {
       setError(err?.response?.data?.error || 'Error al guardar producto');
-      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleDeleteExistingImage = (imageId: number) => {
+    setDeletedImageIds([...deletedImageIds, imageId]);
+    const newExisting = existingImages.filter(img => img.id !== imageId);
+    
+    // Si eliminamos la principal, marcar la primera como principal
+    const wasPressed = existingImages.find(img => img.id === imageId)?.is_primary;
+    if (wasPressed && newExisting.length > 0) {
+      newExisting[0].is_primary = true;
+    }
+    
+    setExistingImages(newExisting);
+  };
+
+  const handleSetPrimaryExisting = (imageId: number) => {
+    setExistingImages(existingImages.map(img => ({
+      ...img,
+      is_primary: img.id === imageId
+    })));
+  };
+
   if (loadingData) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="w-10 h-10 border-4 border-muted border-t-primary rounded-full animate-spin"></div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-muted-foreground">Cargando...</div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <button
-        onClick={() => navigate('/admin/productos')}
-        className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Volver a productos
-      </button>
-
-      <div className="bg-background rounded-xl border shadow-card p-6">
-        <h1 className="font-display text-2xl font-bold text-foreground mb-6">
+    <div className="max-w-4xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-6">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/admin/productos')}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Volver
+        </Button>
+        <h1 className="text-3xl font-bold">
           {isEditing ? 'Editar Producto' : 'Nuevo Producto'}
         </h1>
+      </div>
 
-        {error && (
-          <div className="bg-destructive/10 border border-destructive/30 rounded-lg px-4 py-3 mb-6">
-            <p className="text-destructive text-sm">{error}</p>
-          </div>
-        )}
+      {error && (
+        <div className="bg-destructive/10 text-destructive px-4 py-3 rounded mb-6">
+          {error}
+        </div>
+      )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Información Básica */}
+        <div className="bg-card rounded-lg shadow p-6 space-y-4">
+          <h2 className="text-xl font-semibold mb-4">Información Básica</h2>
+
           {/* Nombre */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Nombre <span className="text-destructive">*</span>
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Nombre del Producto *
             </label>
-            <input
-              type="text"
+            <Input
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="Nombre del producto"
-              className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              required
+              placeholder="Ej: Cerámica Blanca 30x30"
             />
           </div>
 
           {/* Descripción */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">Descripción</label>
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Descripción
+            </label>
             <textarea
-              rows={4}
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="Descripción del producto"
-              className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+              rows={3}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              placeholder="Descripción detallada del producto..."
             />
           </div>
 
           {/* Precio */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Precio (₡) <span className="text-destructive">*</span>
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Precio (₡) *
             </label>
-            <input
+            <Input
               type="number"
               step="0.01"
-              min="0"
               value={form.price}
               onChange={(e) => setForm({ ...form, price: e.target.value })}
-              placeholder="0.00"
-              className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              required
+              placeholder="5000"
             />
           </div>
+        </div>
 
-          {/* Proveedor */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">Proveedor</label>
+        {/* Imágenes - NUEVO */}
+        <div className="bg-card rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-4">Imágenes</h2>
+          
+          {/* Imágenes Existentes (solo en edición) */}
+          {isEditing && existingImages.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-medium mb-3">Imágenes Actuales</h3>
+              <ExistingImagesManager
+                images={existingImages}
+                onDelete={handleDeleteExistingImage}
+                onSetPrimary={handleSetPrimaryExisting}
+              />
+            </div>
+          )}
+
+          {/* Nuevas Imágenes */}
+          <ImageUploader
+            images={newImages}
+            onImagesChange={setNewImages}
+            maxImages={10}
+          />
+        </div>
+
+        {/* Categorías y Tags */}
+        <div className="bg-card rounded-lg shadow p-6 space-y-4">
+          <h2 className="text-xl font-semibold mb-4">Clasificación</h2>
+
+          {/* Categorías */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Categorías
+            </label>
             <select
-              value={form.provider_id || ''}
-              onChange={(e) =>
-                setForm({ ...form, provider_id: e.target.value ? parseInt(e.target.value) : undefined })
-              }
-              className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              multiple
+              value={form.category_ids.map(String)}
+              onChange={(e) => {
+                const selected = Array.from(e.target.selectedOptions, option => parseInt(option.value));
+                setForm({ ...form, category_ids: selected });
+              }}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[100px]"
             >
-              <option value="">Sin proveedor</option>
-              {providers.map((prov) => (
+              {categories.map(cat => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-muted-foreground mt-1">
+              Mantén presionado Ctrl/Cmd para seleccionar múltiples
+            </p>
+          </div>
+
+          {/* Tags */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Etiquetas
+            </label>
+            <select
+              multiple
+              value={form.tag_ids.map(String)}
+              onChange={(e) => {
+                const selected = Array.from(e.target.selectedOptions, option => parseInt(option.value));
+                setForm({ ...form, tag_ids: selected });
+              }}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[100px]"
+            >
+              {tags.map(tag => (
+                <option key={tag.id} value={tag.id}>
+                  {tag.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Proveedores */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Proveedores
+            </label>
+            <select
+              multiple
+              value={form.provider_ids.map(String)}
+              onChange={(e) => {
+                const selected = Array.from(e.target.selectedOptions, option => parseInt(option.value));
+                setForm({ ...form, provider_ids: selected });
+              }}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[100px]"
+            >
+              {providers.map(prov => (
                 <option key={prov.id} value={prov.id}>
                   {prov.name}
                 </option>
               ))}
             </select>
           </div>
+        </div>
 
-          {/* Categorías */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-foreground">
-              Categorías <span className="text-destructive">*</span>
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => toggleCategory(cat.id)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    form.category_ids.includes(cat.id)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Etiquetas */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-foreground">Etiquetas</label>
-            <div className="flex flex-wrap gap-2">
-              {tags.map((tag) => (
-                <button
-                  key={tag.id}
-                  type="button"
-                  onClick={() => toggleTag(tag.id)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    form.tag_ids.includes(tag.id)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
-                >
-                  {tag.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Imagen */}
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-foreground">Imagen</label>
-            
-            {(imagePreview || existingImage) && (
-              <div className="relative w-40 h-40 rounded-lg overflow-hidden border">
-                <img
-                  src={imagePreview || existingImage || ''}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={removeImage}
-                  className="absolute top-2 right-2 p-1 bg-destructive text-destructive-foreground rounded-full hover:opacity-90"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-
-            <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-input bg-background text-sm font-medium text-foreground hover:bg-muted transition-colors cursor-pointer w-fit">
-              <Upload className="h-4 w-4" />
-              {imagePreview ? 'Cambiar imagen' : 'Subir imagen'}
-              <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-            </label>
-          </div>
-
-          {/* Botones */}
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={() => navigate('/admin/productos')}
-              className="px-4 py-2 text-sm font-medium rounded-lg border text-foreground hover:bg-muted transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 text-sm font-medium rounded-lg gradient-hero text-white hover:opacity-90 disabled:opacity-60 transition-opacity"
-            >
-              {loading ? 'Guardando...' : isEditing ? 'Actualizar' : 'Crear Producto'}
-            </button>
-          </div>
-        </form>
-      </div>
+        {/* Actions */}
+        <div className="flex gap-3 justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate('/admin/productos')}
+          >
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? 'Guardando...' : isEditing ? 'Actualizar' : 'Crear'}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };
