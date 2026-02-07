@@ -22,7 +22,7 @@ const Products = () => {
   const [selectedTag, setSelectedTag] = useState<string>('');
   const [selectedProvider, setSelectedProvider] = useState<string>('');
 
-  // Paginación
+  // PaginaciÃ³n
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
@@ -72,7 +72,7 @@ const Products = () => {
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm('¿Eliminar este producto?')) return;
+    if (!window.confirm('Â¿Eliminar este producto?')) return;
     setDeleting(id);
     try {
       await productsApi.delete(id);
@@ -119,9 +119,9 @@ const Products = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Categoría */}
+            {/* CategorÃ­a */}
             <div>
-              <label className="block text-sm font-medium mb-2">Categoría</label>
+              <label className="block text-sm font-medium mb-2">CategorÃ­a</label>
               <select
                 value={selectedCategory}
                 onChange={(e) => {
@@ -130,7 +130,7 @@ const Products = () => {
                 }}
                 className="w-full px-3 py-2 border border-input rounded-lg"
               >
-                <option value="">Todas las categorías</option>
+                <option value="">Todas las categorÃ­as</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
@@ -201,94 +201,96 @@ const Products = () => {
         ) : (
           <>
             <div className="bg-card rounded-lg shadow overflow-hidden">
+              <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-muted">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">Imagen</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">Nombre</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">Precio</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">Categorías</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold">Etiquetas</th>
-                    <th className="px-6 py-3 text-right text-sm font-semibold">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {products.map((product) => (
-                    <tr key={product.id} className="hover:bg-muted/50">
-                      <td className="px-6 py-4">
-                        {product.image_url ? (
-                          <img
-                            src={product.image_url}
-                            alt={product.name}
-                            className="w-16 h-16 object-cover rounded"
-                          />
-                        ) : (
-                          <div className="w-16 h-16 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">
-                            Sin imagen
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="font-medium">{product.name}</div>
-                        <div className="text-sm text-muted-foreground">{product.description}</div>
-                      </td>
-                      <td className="px-6 py-4">₡{product.price.toLocaleString()}</td>
-                      <td className="px-6 py-4">
-                        {product.categories && product.categories.length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
-                            {product.categories.map((cat) => (
-                              <span
-                                key={cat.id}
-                                className="px-2 py-1 bg-primary/10 text-primary text-xs rounded"
-                              >
-                                {cat.name}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">-</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        {product.tags && product.tags.length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
-                            {product.tags.map((tag) => (
-                              <span
-                                key={tag.id}
-                                className="px-2 py-1 bg-accent/10 text-accent text-xs rounded"
-                              >
-                                {tag.name}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">-</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Link
-                            to={`/admin/productos/${product.id}/edit`}
-                            className="p-2 hover:bg-muted rounded"
-                          >
-                            <Pencil size={18} />
-                          </Link>
-                          <button
-                            onClick={() => handleDelete(product.id)}
-                            disabled={deleting === product.id}
-                            className="p-2 hover:bg-destructive/10 text-destructive rounded"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      </td>
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap">Imagen</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap">Nombre</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap">Precio</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap">CategorÃ­as</th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold whitespace-nowrap">Etiquetas</th>
+                      <th className="px-6 py-3 text-right text-sm font-semibold whitespace-nowrap">Acciones</th>
                     </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {products.map((product) => (
+                      <tr key={product.id} className="hover:bg-muted/50">
+                        <td className="px-6 py-4">
+                          {product.image_url ? (
+                            <img
+                              src={product.image_url}
+                              alt={product.name}
+                              className="w-16 h-16 object-cover rounded"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 bg-muted rounded flex items-center justify-center text-xs text-muted-foreground">
+                              Sin imagen
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="font-medium">{product.name}</div>
+                          <div className="text-sm text-muted-foreground">{product.description}</div>
+                        </td>
+                        <td className="px-6 py-4">â‚¡{product.price.toLocaleString()}</td>
+                        <td className="px-6 py-4">
+                          {product.categories && product.categories.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {product.categories.map((cat) => (
+                                <span
+                                  key={cat.id}
+                                  className="px-2 py-1 bg-primary/10 text-primary text-xs rounded"
+                                >
+                                  {cat.name}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">-</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          {product.tags && product.tags.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {product.tags.map((tag) => (
+                                <span
+                                  key={tag.id}
+                                  className="px-2 py-1 bg-accent/10 text-accent text-xs rounded"
+                                >
+                                  {tag.name}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">-</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Link
+                              to={`/admin/productos/${product.id}/edit`}
+                              className="p-2 hover:bg-muted rounded"
+                            >
+                              <Pencil size={18} />
+                            </Link>
+                            <button
+                              onClick={() => handleDelete(product.id)}
+                              disabled={deleting === product.id}
+                              className="p-2 hover:bg-destructive/10 text-destructive rounded"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
+                        </td>
+                    </tr>
+              </div>
                   ))}
                 </tbody>
               </table>
             </div>
 
-            {/* Paginación */}
+            {/* PaginaciÃ³n */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-6">
                 <button
@@ -300,7 +302,7 @@ const Products = () => {
                   Anterior
                 </button>
                 <span className="text-sm text-muted-foreground">
-                  Página {page} de {totalPages}
+                  PÃ¡gina {page} de {totalPages}
                 </span>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}

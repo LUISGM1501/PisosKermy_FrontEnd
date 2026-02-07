@@ -9,6 +9,7 @@ export const productsApi = {
     page?: number;
     category_id?: number;
     tag_id?: number;
+    search?: string;  // NUEVO
   }): Promise<{ products: Product[]; total: number; total_pages: number; pages: number }> => {
     const response = await apiClient.get<{ products: Product[]; total: number; pages: number }>('/api/products', { params });
     return {
@@ -30,12 +31,13 @@ export const productsApi = {
    */
   getAllAdmin: async (
     page: number = 1,
-    filters?: { category_id?: string; tag_id?: string; provider_id?: string }
+    filters?: { category_id?: string; tag_id?: string; provider_id?: string; search?: string }  // NUEVO: search
   ): Promise<AdminProductsResponse> => {
     const params: any = { page };
     if (filters?.category_id) params.category_id = filters.category_id;
     if (filters?.tag_id) params.tag_id = filters.tag_id;
     if (filters?.provider_id) params.provider_id = filters.provider_id;
+    if (filters?.search) params.search = filters.search;  // NUEVO
 
     const response = await apiClient.get<AdminProductsResponse>('/api/admin/products', { params });
     return response.data;
