@@ -188,7 +188,7 @@ const ProductForm = () => {
       const formData = new FormData();
       formData.append('name', form.name.trim());
       formData.append('description', form.description?.trim() || '');
-      formData.append('price', parseFloat(form.price).toString()); // FORZAR a número válido
+      formData.append('price', form.price); // Enviar como string, backend lo convierte
       formData.append('category_ids', JSON.stringify(form.category_ids));
       formData.append('tag_ids', JSON.stringify(form.tag_ids));
       formData.append('provider_ids', JSON.stringify(form.provider_id ? [form.provider_id] : []));
@@ -207,11 +207,16 @@ const ProductForm = () => {
       if (isEditing && id) {
         await productsApi.update(parseInt(id), formData);
         
-        // Eliminar imágenes existentes que fueron quitadas
-        const currentIds = existingImages.map(img => img.id);
+        // Eliminar SOLO imágenes EXISTENTES que fueron quitadas
+        // NO intentar eliminar imágenes nuevas (no tienen ID en servidor todavía)
+        const currentExistingIds = existingImages.map(img => img.id);
+        
+        // Obtener producto original para saber qué imágenes tenía antes
         const originalProduct = await productsApi.getByIdAdmin(parseInt(id));
         const originalIds = originalProduct.images?.map((img: any) => img.id) || [];
-        const deletedIds = originalIds.filter((imgId: number) => !currentIds.includes(imgId));
+        
+        // Solo eliminar las que EXISTÍAN y ahora NO están
+        const deletedIds = originalIds.filter((imgId: number) => !currentExistingIds.includes(imgId));
         
         for (const imgId of deletedIds) {
           await productsApi.deleteImage(parseInt(id), imgId);
@@ -464,10 +469,6 @@ const ProductForm = () => {
                 className="hidden"
               />
             </label>
-            <p className="text-xs text-muted-foreground">
-              <Star className="inline h-3 w-3 fill-yellow-400 text-yellow-400" /> = Imagen principal. 
-              Puedes agregar hasta 10 imágenes.
-            </p>
           </div>
 
           {/* Botones */}
