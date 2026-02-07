@@ -31,9 +31,10 @@ const ProductForm = () => {
   const [tags, setTags] = useState<Tag[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
 
-  // NUEVO: Imágenes
+  // NUEVO: Imagenes
   const [newImages, setNewImages] = useState<ImageFile[]>([]);
   const [existingImages, setExistingImages] = useState<ProductImage[]>([]);
+  const [originalImageIds, setOriginalImageIds] = useState<number[]>([]); // FIX: Guardar IDs originales
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,9 +67,11 @@ const ProductForm = () => {
           provider_id: product.providers[0]?.id || undefined,
         });
         
-        // Cargar imágenes existentes
+        // Cargar imagenes existentes
         if (product.images && product.images.length > 0) {
           setExistingImages(product.images);
+          // FIX: Guardar IDs originales para comparar al guardar
+          setOriginalImageIds(product.images.map((img: ProductImage) => img.id));
         }
       }
     } catch (err) {
@@ -79,7 +82,7 @@ const ProductForm = () => {
     }
   };
 
-  // Agregar imágenes nuevas
+  // Agregar imagenes nuevas
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
@@ -96,7 +99,7 @@ const ProductForm = () => {
   // Eliminar imagen nueva
   const removeNewImage = (index: number) => {
     const updated = newImages.filter((_, i) => i !== index);
-    // Si eliminamos la principal y quedan imágenes, marcar la primera como principal
+    // Si eliminamos la principal y quedan imagenes, marcar la primera como principal
     if (newImages[index].isPrimary && updated.length > 0) {
       updated[0].isPrimary = true;
     }
@@ -167,7 +170,7 @@ const ProductForm = () => {
     }
 
     if (form.category_ids.length === 0) {
-      setError('Selecciona al menos una categoría');
+      setError('Selecciona al menos una categoria');
       return;
     }
 
@@ -188,17 +191,17 @@ const ProductForm = () => {
       const formData = new FormData();
       formData.append('name', form.name.trim());
       formData.append('description', form.description?.trim() || '');
-      formData.append('price', form.price); // Enviar como string, backend lo convierte
+      formData.append('price', form.price);
       formData.append('category_ids', JSON.stringify(form.category_ids));
       formData.append('tag_ids', JSON.stringify(form.tag_ids));
       formData.append('provider_ids', JSON.stringify(form.provider_id ? [form.provider_id] : []));
 
-      // Agregar nuevas imágenes
+      // Agregar nuevas imagenes
       newImages.forEach(img => {
         formData.append('images', img.file);
       });
 
-      // Indicar cuál es la principal
+      // Indicar cual es la principal
       const primaryNewIndex = newImages.findIndex(img => img.isPrimary);
       if (primaryNewIndex >= 0) {
         formData.append('primary_image_index', primaryNewIndex.toString());
@@ -207,16 +210,9 @@ const ProductForm = () => {
       if (isEditing && id) {
         await productsApi.update(parseInt(id), formData);
         
-        // Eliminar SOLO imágenes EXISTENTES que fueron quitadas
-        // NO intentar eliminar imágenes nuevas (no tienen ID en servidor todavía)
+        // FIX: Eliminar SOLO imagenes que estaban originalmente y fueron quitadas
         const currentExistingIds = existingImages.map(img => img.id);
-        
-        // Obtener producto original para saber qué imágenes tenía antes
-        const originalProduct = await productsApi.getByIdAdmin(parseInt(id));
-        const originalIds = originalProduct.images?.map((img: any) => img.id) || [];
-        
-        // Solo eliminar las que EXISTÍAN y ahora NO están
-        const deletedIds = originalIds.filter((imgId: number) => !currentExistingIds.includes(imgId));
+        const deletedIds = originalImageIds.filter(imgId => !currentExistingIds.includes(imgId));
         
         for (const imgId of deletedIds) {
           await productsApi.deleteImage(parseInt(id), imgId);
@@ -240,6 +236,24 @@ const ProductForm = () => {
     }
   };
 
+  // Para mostrar todas las imagenes juntas
+  const allImages = [
+    ...existingImages.map((img, idx) => ({
+      id: img.id,
+      image_url: img.image_path,
+      is_primary: img.is_primary,
+      display_order: img.display_order ?? idx,
+      isNew: false,
+    })),
+    ...newImages.map((img, idx) => ({
+      id: `new-${idx}`,
+      image_url: img.preview,
+      is_primary: img.isPrimary,
+      display_order: existingImages.length + idx,
+      isNew: true,
+    })),
+  ].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+
   if (loadingData) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -248,39 +262,26 @@ const ProductForm = () => {
     );
   }
 
-  const allImages = [
-    ...existingImages.map((img, i) => ({ ...img, isNew: false, display_order: i })),
-    ...newImages.map((img, i) => ({ 
-      id: -i - 1, 
-      image_url: img.preview, 
-      is_primary: img.isPrimary, 
-      display_order: existingImages.length + i,
-      isNew: true 
-    }))
-  ];
-
   return (
-    <div className="max-w-3xl mx-auto">
-      <button
-        onClick={() => navigate('/admin/productos')}
-        className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Volver a productos
-      </button>
-
-      <div className="bg-background rounded-xl border shadow-card p-6">
-        <h1 className="font-display text-2xl font-bold text-foreground mb-6">
-          {isEditing ? 'Editar Producto' : 'Nuevo Producto'}
-        </h1>
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6 flex items-center gap-4">
+          <button
+            onClick={() => navigate('/admin/productos')}
+            className="p-2 hover:bg-muted rounded-lg transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-2xl font-bold">{isEditing ? 'Editar' : 'Nuevo'} Producto</h1>
+        </div>
 
         {error && (
-          <div className="bg-destructive/10 border border-destructive/30 rounded-lg px-4 py-3 mb-6">
-            <p className="text-destructive text-sm">{error}</p>
+          <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+            <p className="text-sm text-destructive">{error}</p>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="bg-card rounded-lg p-6 shadow-sm flex flex-col gap-6">
           {/* Nombre */}
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-foreground">
@@ -295,14 +296,14 @@ const ProductForm = () => {
             />
           </div>
 
-          {/* Descripción */}
+          {/* Descripcion */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-foreground">Descripción</label>
+            <label className="text-sm font-medium text-foreground">Descripcion</label>
             <textarea
               rows={4}
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="Descripción del producto"
+              placeholder="Descripcion del producto"
               className="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
             />
           </div>
@@ -342,10 +343,10 @@ const ProductForm = () => {
             </select>
           </div>
 
-          {/* Categorías */}
+          {/* Categorias */}
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-foreground">
-              Categorías <span className="text-destructive">*</span>
+              Categorias <span className="text-destructive">*</span>
             </label>
             <div className="flex flex-wrap gap-2">
               {categories.map((cat) => (
@@ -386,13 +387,13 @@ const ProductForm = () => {
             </div>
           </div>
 
-          {/* IMÁGENES - SIMPLIFICADO */}
+          {/* IMAGENES */}
           <div className="flex flex-col gap-3">
             <label className="text-sm font-medium text-foreground">
-              Imágenes <span className="text-destructive">*</span>
+              Imagenes <span className="text-destructive">*</span>
             </label>
 
-            {/* Grid de imágenes */}
+            {/* Grid de imagenes */}
             {allImages.length > 0 && (
               <div className="grid grid-cols-3 gap-3">
                 {allImages.map((img: any) => (
@@ -412,7 +413,7 @@ const ProductForm = () => {
                       </div>
                     )}
 
-                    {/* Número */}
+                    {/* Numero */}
                     <div className="absolute top-1 right-1 bg-black/60 text-white px-1.5 py-0.5 rounded text-xs">
                       #{(img.display_order ?? 0) + 1}
                     </div>
@@ -457,10 +458,10 @@ const ProductForm = () => {
               </div>
             )}
 
-            {/* Botón agregar */}
+            {/* Boton agregar */}
             <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-input bg-background text-sm font-medium text-foreground hover:bg-muted transition-colors cursor-pointer w-fit">
               <Upload className="h-4 w-4" />
-              Agregar imágenes
+              Agregar imagenes
               <input
                 type="file"
                 accept="image/*"
