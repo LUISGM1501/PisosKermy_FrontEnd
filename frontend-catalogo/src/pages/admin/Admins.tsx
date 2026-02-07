@@ -4,6 +4,7 @@ import { adminsApi, AdminFormData } from '../../api/admins';
 import { Admin } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 
+// Create, edit, password
 type ModalMode = 'create' | 'edit' | 'password' | null;
 
 const Admins = () => {
