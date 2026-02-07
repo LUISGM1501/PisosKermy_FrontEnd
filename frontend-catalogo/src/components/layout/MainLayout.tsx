@@ -1,5 +1,6 @@
 import Header from "./Header";
 import Footer from "./Footer";
+import WhatsAppFloat from "../common/WhatsAppFloat";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -12,6 +13,7 @@ export const MainLayout = ({ children, hideFooter = false }: MainLayoutProps) =>
       <Header />
       <main className="flex-1">{children}</main>
       {!hideFooter && <Footer />}
+      <WhatsAppFloat />
     </div>
   );
 };
