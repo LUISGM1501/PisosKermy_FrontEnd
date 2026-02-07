@@ -9,7 +9,7 @@ export const productsApi = {
     page?: number;
     category_id?: number;
     tag_id?: number;
-    search?: string;  // NUEVO
+    search?: string;
   }): Promise<{ products: Product[]; total: number; total_pages: number; pages: number }> => {
     const response = await apiClient.get<{ products: Product[]; total: number; pages: number }>('/api/products', { params });
     return {
@@ -31,13 +31,13 @@ export const productsApi = {
    */
   getAllAdmin: async (
     page: number = 1,
-    filters?: { category_id?: string; tag_id?: string; provider_id?: string; search?: string }  // NUEVO: search
+    filters?: { category_id?: string; tag_id?: string; provider_id?: string; search?: string }
   ): Promise<AdminProductsResponse> => {
     const params: any = { page };
     if (filters?.category_id) params.category_id = filters.category_id;
     if (filters?.tag_id) params.tag_id = filters.tag_id;
     if (filters?.provider_id) params.provider_id = filters.provider_id;
-    if (filters?.search) params.search = filters.search;  // NUEVO
+    if (filters?.search) params.search = filters.search;
 
     const response = await apiClient.get<AdminProductsResponse>('/api/admin/products', { params });
     return response.data;
@@ -52,23 +52,9 @@ export const productsApi = {
   },
 
   /**
-   * Crear producto (con imagen opcional)
+   * Crear producto con múltiples imágenes
    */
-  create: async (data: ProductFormData): Promise<AdminProduct> => {
-    const formData = new FormData();
-    formData.append('name', data.name);
-    if (data.description) {
-      formData.append('description', data.description);
-    }
-    formData.append('price', data.price.toString());
-    formData.append('category_ids', JSON.stringify(data.category_ids));
-    formData.append('tag_ids', JSON.stringify(data.tag_ids));
-    formData.append('provider_ids', JSON.stringify(data.provider_ids));
-    
-    if (data.image) {
-      formData.append('image', data.image);
-    }
-
+  create: async (formData: FormData): Promise<AdminProduct> => {
     const response = await apiClient.post<AdminProduct>('/api/admin/products', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -78,23 +64,9 @@ export const productsApi = {
   },
 
   /**
-   * Actualizar producto
+   * Actualizar producto con múltiples imágenes
    */
-  update: async (id: number, data: ProductFormData): Promise<AdminProduct> => {
-    const formData = new FormData();
-    formData.append('name', data.name);
-    if (data.description) {
-      formData.append('description', data.description);
-    }
-    formData.append('price', data.price.toString());
-    formData.append('category_ids', JSON.stringify(data.category_ids));
-    formData.append('tag_ids', JSON.stringify(data.tag_ids));
-    formData.append('provider_ids', JSON.stringify(data.provider_ids));
-    
-    if (data.image) {
-      formData.append('image', data.image);
-    }
-
+  update: async (id: number, formData: FormData): Promise<AdminProduct> => {
     const response = await apiClient.put<AdminProduct>(`/api/admin/products/${id}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -124,13 +96,3 @@ export const productsApi = {
     await apiClient.put(`/api/admin/products/${productId}/images/${imageId}/set-primary`);
   },
 };
-
-interface ProductFormData {
-  name: string;
-  description?: string;
-  price: number;
-  category_ids: number[];
-  tag_ids: number[];
-  provider_ids: number[];
-  image?: File;
-}

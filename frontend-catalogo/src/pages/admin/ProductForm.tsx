@@ -188,7 +188,7 @@ const ProductForm = () => {
       const formData = new FormData();
       formData.append('name', form.name.trim());
       formData.append('description', form.description?.trim() || '');
-      formData.append('price', form.price);
+      formData.append('price', parseFloat(form.price).toString()); // FORZAR a número válido
       formData.append('category_ids', JSON.stringify(form.category_ids));
       formData.append('tag_ids', JSON.stringify(form.tag_ids));
       formData.append('provider_ids', JSON.stringify(form.provider_id ? [form.provider_id] : []));
@@ -205,7 +205,7 @@ const ProductForm = () => {
       }
 
       if (isEditing && id) {
-        await productsApi.update(parseInt(id), formData as any);
+        await productsApi.update(parseInt(id), formData);
         
         // Eliminar imágenes existentes que fueron quitadas
         const currentIds = existingImages.map(img => img.id);
@@ -223,7 +223,7 @@ const ProductForm = () => {
           await productsApi.setPrimaryImage(parseInt(id), primaryExisting.id);
         }
       } else {
-        await productsApi.create(formData as any);
+        await productsApi.create(formData);
       }
 
       navigate('/admin/productos');
@@ -464,6 +464,10 @@ const ProductForm = () => {
                 className="hidden"
               />
             </label>
+            <p className="text-xs text-muted-foreground">
+              <Star className="inline h-3 w-3 fill-yellow-400 text-yellow-400" /> = Imagen principal. 
+              Puedes agregar hasta 10 imágenes.
+            </p>
           </div>
 
           {/* Botones */}
