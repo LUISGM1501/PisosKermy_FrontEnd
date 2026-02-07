@@ -18,6 +18,7 @@ const Catalog = () => {
   
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [selectedTag, setSelectedTag] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');  // NUEVO
   
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -30,7 +31,7 @@ const Catalog = () => {
 
   useEffect(() => {
     loadProducts();
-  }, [currentPage, selectedCategory, selectedTag]);
+  }, [currentPage, selectedCategory, selectedTag, searchQuery]);  // NUEVO: searchQuery
 
   const loadFiltersData = async () => {
     try {
@@ -54,6 +55,7 @@ const Catalog = () => {
         page: currentPage,
         category_id: selectedCategory || undefined,
         tag_id: selectedTag || undefined,
+        search: searchQuery || undefined,  // NUEVO
       });
 
       setProducts(response.products);
@@ -77,9 +79,17 @@ const Catalog = () => {
     reset();
   };
 
+  // NUEVO
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    reset();  // Volver a página 1 al buscar
+  };
+
+  // ACTUALIZADO: Limpiar también búsqueda
   const handleClearFilters = () => {
     setSelectedCategory(null);
     setSelectedTag(null);
+    setSearchQuery('');  // NUEVO
     reset();
   };
 
@@ -88,7 +98,7 @@ const Catalog = () => {
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Catalogo de Productos
+            Catálogo de Productos
           </h1>
           <p className="text-gray-600">
             {totalProducts} {totalProducts === 1 ? 'producto encontrado' : 'productos encontrados'}
@@ -106,8 +116,10 @@ const Catalog = () => {
           tags={tags}
           selectedCategory={selectedCategory}
           selectedTag={selectedTag}
+          searchQuery={searchQuery}  // NUEVO
           onCategoryChange={handleCategoryChange}
           onTagChange={handleTagChange}
+          onSearchChange={handleSearchChange}  // NUEVO
           onClearFilters={handleClearFilters}
         />
 
@@ -124,4 +136,5 @@ const Catalog = () => {
     </>
   );
 };
+
 export default Catalog;

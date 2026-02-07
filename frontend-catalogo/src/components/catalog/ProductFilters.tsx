@@ -1,15 +1,18 @@
+import { useState, useEffect } from "react";
 import { Category, Tag } from "../../types";
 import { Button } from "../ui/button";
 import { cn } from "../../lib/utils";
-import { Filter, X } from "lucide-react";
+import { Filter, X, Search } from "lucide-react";
 
 interface ProductFiltersProps {
   categories: Category[];
   tags: Tag[];
   selectedCategory: number | null;
   selectedTag: number | null;
+  searchQuery: string;
   onCategoryChange: (categoryId: number | null) => void;
   onTagChange: (tagId: number | null) => void;
+  onSearchChange: (query: string) => void;
   onClearFilters: () => void;
 }
 
@@ -18,11 +21,28 @@ export const ProductFilters = ({
   tags,
   selectedCategory,
   selectedTag,
+  searchQuery,
   onCategoryChange,
   onTagChange,
+  onSearchChange,
   onClearFilters,
 }: ProductFiltersProps) => {
-  const hasFilters = selectedCategory !== null || selectedTag !== null;
+  const [localSearch, setLocalSearch] = useState(searchQuery);
+  const hasFilters = selectedCategory !== null || selectedTag !== null || searchQuery !== '';
+
+  // Debounce: Espera 500ms después de que el usuario deje de escribir
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onSearchChange(localSearch);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [localSearch, onSearchChange]);
+
+  // Sincronizar con prop cuando se limpian filtros
+  useEffect(() => {
+    setLocalSearch(searchQuery);
+  }, [searchQuery]);
 
   return (
     <div className="bg-card rounded-lg border shadow-card p-6">
@@ -38,6 +58,26 @@ export const ProductFilters = ({
             Limpiar
           </Button>
         )}
+      </div>
+
+      {/* Búsqueda por nombre */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-foreground mb-1.5">
+          Buscar producto
+        </label>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
+            placeholder="Ej: Cerámica, Porcelanato..."
+            className={cn(
+              "w-full rounded-md border border-input bg-background pl-9 pr-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+              searchQuery !== '' && "border-primary/50 bg-primary/5"
+            )}
+          />
+        </div>
       </div>
 
       {/* Categoría */}
@@ -95,6 +135,7 @@ export const ProductFilters = ({
         <div className="mt-4 pt-4 border-t border-border">
           <p className="text-xs text-muted-foreground">
             {[
+              searchQuery && `Búsqueda: "${searchQuery}"`,
               selectedCategory && categories.find((c) => c.id === selectedCategory)?.name,
               selectedTag && tags.find((t) => t.id === selectedTag)?.name,
             ]
