@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, PackageOpen } from 'lucide-react';
+import { ArrowLeft, ChevronRight, PackageOpen, MessageCircle } from 'lucide-react';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Spinner } from '../../components/ui/spinner';
@@ -34,6 +34,14 @@ const ProductDetail = () => {
     };
     fetchProduct();
   }, [id]);
+
+  // Función para generar link de WhatsApp
+  const handleWhatsAppClick = () => {
+    const phoneNumber = '50626431333'; // +506 2643-1333
+    const message = `Hola, me interesa el producto: ${product?.name}`;
+    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
 
   // --- loading ---
   if (loading) {
@@ -128,10 +136,19 @@ const ProductDetail = () => {
             </div>
           )}
 
-          {/* Volver al catálogo (desktop) */}
-          <div className="pt-4">
-            <Link to="/catalogo">
-              <Button variant="outline" className="flex items-center gap-2">
+          {/* Botón de WhatsApp */}
+          <div className="pt-4 flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={handleWhatsAppClick}
+              className="inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg px-6 py-3 transition-colors shadow-md hover:shadow-lg"
+            >
+              <MessageCircle className="h-5 w-5" />
+              Consultar por WhatsApp
+            </button>
+
+            {/* Volver al catálogo (desktop) */}
+            <Link to="/catalogo" className="sm:flex-1">
+              <Button variant="outline" className="w-full flex items-center justify-center gap-2">
                 <ArrowLeft className="h-4 w-4" />
                 Volver al Catálogo
               </Button>

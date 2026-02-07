@@ -1,8 +1,15 @@
 import { Link } from "react-router-dom";
-import { Phone, Mail, MapPin, Clock } from "lucide-react";
+import { MessageCircle, Mail, MapPin, Clock } from "lucide-react";
 import { ROUTES } from "../../utils/constants";
 
 const Footer = () => {
+  // Números de WhatsApp
+  const whatsappNumbers = [
+    { number: "+506 2643-1333", link: "50626431333", label: "Jacó" },
+    { number: "+506 2777-3636", link: "50627773636", label: "Quepos" },
+    { number: "+506 2777-4838", link: "50627774838", label: "Quepos" },
+  ];
+
   return (
     <footer className="bg-foreground text-primary-foreground">
       <div className="container py-12 md:py-16">
@@ -40,14 +47,31 @@ const Footer = () => {
           <div className="space-y-4">
             <h4 className="font-display font-semibold text-lg">Contacto</h4>
             <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-3 text-sm text-primary-foreground/80">
-                <Phone className="h-4 w-4 text-primary shrink-0" />
-                <span>+506 2643-1333</span>
+              {/* WhatsApp Numbers */}
+              <div className="flex flex-col gap-2">
+                {whatsappNumbers.map((item, index) => (
+                  <a
+                    key={index}
+                    href={`https://wa.me/${item.link}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 text-sm text-primary-foreground/80 hover:text-primary-foreground transition-colors group"
+                  >
+                    <MessageCircle className="h-4 w-4 text-primary shrink-0 group-hover:scale-110 transition-transform" />
+                    <span className="group-hover:underline">
+                      {item.number} <span className="text-xs opacity-60">({item.label})</span>
+                    </span>
+                  </a>
+                ))}
               </div>
+
+              {/* Email */}
               <div className="flex items-center gap-3 text-sm text-primary-foreground/80">
                 <Mail className="h-4 w-4 text-primary shrink-0" />
                 <span>pisoskermy@gmail.com</span>
               </div>
+
+              {/* Ubicación */}
               <div className="flex items-start gap-3 text-sm text-primary-foreground/80">
                 <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                 <span>Jacó, Puntarenas, Costa Rica</span>
