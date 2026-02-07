@@ -4,7 +4,6 @@ import { adminsApi, AdminFormData } from '../../api/admins';
 import { Admin } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 
-// Create, edit, password
 type ModalMode = 'create' | 'edit' | 'password' | null;
 
 const Admins = () => {
@@ -24,6 +23,28 @@ const Admins = () => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
+
+  // Helper para determinar si se puede editar un admin
+  const canEditAdmin = (admin: Admin): boolean => {
+    // Si es el admin 1 y yo NO soy el admin 1, no puedo editarlo
+    if (admin.id === 1 && currentAdmin?.id !== 1) {
+      return false;
+    }
+    return true;
+  };
+
+  // Helper para determinar si se puede desactivar un admin
+  const canToggleAdmin = (admin: Admin): boolean => {
+    // No puedo desactivarme a mi mismo
+    if (admin.id === currentAdmin?.id) {
+      return false;
+    }
+    // NADIE puede desactivar al admin 1
+    if (admin.id === 1) {
+      return false;
+    }
+    return true;
+  };
 
   const fetchAdmins = async () => {
     setLoading(true);
@@ -261,30 +282,50 @@ const Admins = () => {
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => openEdit(admin)}
-                            className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-                            title="Editar"
+                            disabled={!canEditAdmin(admin)}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              !canEditAdmin(admin)
+                                ? 'opacity-40 cursor-not-allowed text-muted-foreground'
+                                : 'text-muted-foreground hover:text-primary hover:bg-primary/10'
+                            }`}
+                            title={
+                              !canEditAdmin(admin)
+                                ? 'Solo el administrador principal puede editar esta cuenta'
+                                : 'Editar'
+                            }
                           >
                             <Pencil className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => openPasswordChange(admin)}
-                            className="p-1.5 rounded-lg text-muted-foreground hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                            title="Cambiar contraseña"
+                            disabled={!canEditAdmin(admin)}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              !canEditAdmin(admin)
+                                ? 'opacity-40 cursor-not-allowed text-muted-foreground'
+                                : 'text-muted-foreground hover:text-blue-600 hover:bg-blue-50'
+                            }`}
+                            title={
+                              !canEditAdmin(admin)
+                                ? 'Solo el administrador principal puede cambiar esta contraseña'
+                                : 'Cambiar contraseña'
+                            }
                           >
                             <Key className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleToggleStatus(admin)}
-                            disabled={admin.id === currentAdmin?.id}
+                            disabled={!canToggleAdmin(admin)}
                             className={`p-1.5 rounded-lg transition-colors ${
-                              admin.id === currentAdmin?.id
+                              !canToggleAdmin(admin)
                                 ? 'opacity-40 cursor-not-allowed'
                                 : admin.is_active
                                 ? 'text-muted-foreground hover:text-orange-600 hover:bg-orange-50'
                                 : 'text-muted-foreground hover:text-green-600 hover:bg-green-50'
                             }`}
                             title={
-                              admin.id === currentAdmin?.id
+                              admin.id === 1
+                                ? 'No se puede desactivar al administrador principal'
+                                : admin.id === currentAdmin?.id
                                 ? 'No puedes desactivarte a ti mismo'
                                 : admin.is_active
                                 ? 'Desactivar'
