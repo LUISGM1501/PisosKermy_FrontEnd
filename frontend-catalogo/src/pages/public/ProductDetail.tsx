@@ -6,7 +6,6 @@ import { Product } from '../../types';
 import { ProductImageGallery } from '../../components/catalog/ProductImageGallery';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
-import { API_BASE_URL } from '../../utils/constants';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();

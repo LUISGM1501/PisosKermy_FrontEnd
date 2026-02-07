@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Upload, X, Star } from 'lucide-react';
 import { Button } from '../ui/button';
 
