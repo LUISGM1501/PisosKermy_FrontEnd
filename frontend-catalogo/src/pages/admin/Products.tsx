@@ -21,6 +21,7 @@ const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedTag, setSelectedTag] = useState<string>('');
   const [selectedProvider, setSelectedProvider] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Paginación
   const [page, setPage] = useState(1);
@@ -33,7 +34,7 @@ const Products = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, [page, selectedCategory, selectedTag, selectedProvider]);
+  }, [page, selectedCategory, selectedTag, selectedProvider, searchQuery]);
 
   const loadFilters = async () => {
     try {
@@ -54,11 +55,11 @@ const Products = () => {
     setLoading(true);
     setError(null);
     try {
-      // pasar filtros correctamente
       const filters: any = {};
       if (selectedCategory) filters.category_id = selectedCategory;
       if (selectedTag) filters.tag_id = selectedTag;
       if (selectedProvider) filters.provider_id = selectedProvider;
+      if (searchQuery) filters.search = searchQuery;
 
       const res = await productsApi.getAllAdmin(page, filters);
       setProducts(res.products);
@@ -89,6 +90,7 @@ const Products = () => {
     setSelectedCategory('');
     setSelectedTag('');
     setSelectedProvider('');
+    setSearchQuery('');
     setPage(1);
   };
 
@@ -116,6 +118,21 @@ const Products = () => {
             >
               Limpiar filtros
             </button>
+          </div>
+
+          {/* Campo de búsqueda */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2">Buscar por nombre</label>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Buscar productos..."
+              className="w-full px-3 py-2 border border-input rounded-lg"
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
